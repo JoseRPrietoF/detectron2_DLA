@@ -22,7 +22,7 @@ from utils.createPage import createPage
 from detectron2.engine import DefaultTrainer
 from detectron2.engine.defaults import DefaultPredictor
 from models import model
-
+from pathlib import Path
 VISUALIZE_ON = False
 
 def prepare():
@@ -95,12 +95,7 @@ def main():
         os.mkdir(path_res_test)
     # --- configure TensorBoard display
     opts.img_size = np.array(opts.img_size, dtype=int)
-    width, height = np.array(opts.img_size, dtype=int)
     logger.info(opts)
-    if opts.debug:
-        dir_train = os.path.join(opts.work_dir, "debug/train")
-        dir_test = os.path.join(opts.work_dir, "debug/test")
-        dir_dev = os.path.join(opts.work_dir, "debug/dev")
 
     setup_logger(output=opts.work_dir)
     # --------------------------------------------------------------------------
@@ -129,15 +124,8 @@ def main():
         else:
             MetadataCatalog.get("train").set(thing_classes=opts.classes)
 
-        if opts.do_val:
-            dataset_function_val, dataset_val = get_dataset(path=opts.val_data, opts=opts, split="train", logger=logger, cfg=cfg)
-            DatasetCatalog.register("val", dataset_function_val)
-            if dataset_tr.acts:
-                MetadataCatalog.get("val").set(thing_classes=["AI", "AM", "AF", "AC"])
-            else:
-                MetadataCatalog.get("val").set(thing_classes=opts.classes)
 
-        if opts.epochs > 0:
+        if opts.do_train:
             if opts.WORLD_SIZE != 0:
                 print(f"More than one gpu world size {opts.WORLD_SIZE}")
                 launch(
@@ -160,9 +148,7 @@ def main():
         cfg.MODEL.WEIGHTS = os.path.join(cfg.OUTPUT_DIR, "model_final.pth") 
         metadata = MetadataCatalog.get("train")
         output_page_train = os.path.join(path_res_train_imgs, "page")
-        if opts.create_GT_tables:
-            output_page_train_GTtables = os.path.join(path_res_train_imgs, "page_GTTables")
-            os.makedirs(output_page_train_GTtables, exist_ok=True)
+
         os.makedirs(output_page_train, exist_ok=True)
         
         ####EVALUATE - Test
@@ -199,11 +185,8 @@ def inference(opts,output_page_test, output_lattice_test, logger, cfg, acts=Fals
     path_res = os.path.join(opts.work_dir, "results")
     path_res_test = os.path.join(path_res, "test")
     path_res_test_imgs = os.path.join(path_res_test, "visualizer")
-    if not os.path.exists(path_res_test_imgs):
-        try:
-            os.mkdir(path_res_test_imgs)
-        except:
-            pass
+    Path(path_res_test_imgs).mkdir(parents=True, exist_ok=True)
+
     print("MODEL --- \n\n\n")
 
     predictor = DefaultPredictor(cfg)
@@ -246,14 +229,6 @@ def m(cfg, opts):
             MetadataCatalog.get("train").set(thing_classes=["AI", "AM", "AF", "AC"])
     else:
         MetadataCatalog.get("train").set(thing_classes=opts.classes)
-
-    if opts.do_val:
-        dataset_function_val, dataset_val = get_dataset(path=opts.val_data, opts=opts, split="train", logger=None, cfg=cfg)
-        DatasetCatalog.register("val", dataset_function_val)
-        if dataset_tr.acts:
-            MetadataCatalog.get("val").set(thing_classes=["AI", "AM", "AF", "AC"])
-        else:
-            MetadataCatalog.get("val").set(thing_classes=opts.classes)
 
     dataset_function_te, dataset_te = get_dataset(path=opts.te_data, opts=opts, split="test", logger=None, cfg=cfg)
     DatasetCatalog.register("test", dataset_function_te)

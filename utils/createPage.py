@@ -169,20 +169,13 @@ def createPage(outputs, img_name, opts, dir_output, im=None, hisClima=True, save
     regions = []
     path_img = os.path.join(opts.img_path, img_name)
     Bls = False
-    #TODO
-    if "new" in opts.model.lower():
-        syms = load_syms(opts)
     # for i, pred_mask_i in enumerate(outputs.pred_masks):
     for i, pred_box_i in enumerate(outputs.pred_boxes):
         pred_class_i = outputs.pred_classes[i]
         score = outputs.scores[i]
         if mask:
             pred_mask_i = outputs.pred_masks[i]
-        if "new" in opts.model.lower():
-            text_encoded_i = outputs.text_encoded[i]
-            text, align_text = trellis_to_syms(text_encoded_i, syms)
-        else:
-            text = ""
+        text = ""
         
         if opts.structure:
             cc_row_i = 0
@@ -582,13 +575,3 @@ def create_coords_str(coords):
         res += f'{x},{y}, '
     res = res[:-2]
     return res
-
-def load_syms(opts):
-    f = open(opts.path_syms, "r")
-    lines = f.readlines()
-    f.close()
-    syms = {}
-    for line in lines:
-        sym, value = line.strip().split(" ")
-        syms[sym] = int(value)
-    return syms

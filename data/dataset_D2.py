@@ -79,7 +79,6 @@ class ImageDataset():
         self.cfg = cfg
         if self.acts:
             self.IG_order, self.IG_order_dict = load_IG(cfg.MODEL.ACTS.IG_FILE, nwords=cfg.MODEL.ACTS.NWORDS)
-        self.max_width = opts.max_width
         self.opts = opts
         self.px_height_offset = opts.px_height_offset
         self.from_baseline = opts.from_baseline
@@ -164,7 +163,7 @@ class ImageDataset():
         page = TablePAGE(fname, hisClima=True)
         
         width_orig, height_orig = page.get_width(), page.get_height()
-        max_width_page = self.max_width * width_orig
+        max_width_page = width_orig
         trans_width, trans_height  = self.width / width_orig, self.height / height_orig
         fname_image = os.path.join(self.img_path, f'{fname_noext}.jpg')
         if not os.path.exists(fname_image):
@@ -205,9 +204,7 @@ class ImageDataset():
                 max_w, max_h = max([x[0] for x in coords]), max([x[1] for x in coords])
                 min_w, min_h = min([x[0] for x in coords]), min([x[1] for x in coords])
                 w_tl = (max_w - min_w)
-                # print(max_w, max_width_page)
                 if w_tl >= max_width_page:
-                    # print(f"Delete {fname} {id_}")
                     continue
                 box_coords = self.get_inclusion_box(coords, height_orig, width_orig, trans_width, trans_height)
                 box_coords_real = self.get_inclusion_box(coords, height_orig, width_orig)

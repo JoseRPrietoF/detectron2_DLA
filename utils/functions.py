@@ -41,22 +41,7 @@ def load_image(path, dim=None):
 
     return image
 
-def save_checkpoint(state, is_best, opts, logger, epoch, criterion=""):
-    """
-    Save current model to checkpoints dir
-    """
-    # --- borrowed from: https://github.com/pytorch/examples/blob/master/imagenet/main.py#L139
-    if is_best:
-        out_file = os.path.join(
-            opts.checkpoints, "".join(["best_under", criterion, "criterion.pth"])
-        )
-        torch.save(state, out_file)
-        logger.info("Best model saved to {} at epoch {}".format(out_file, str(epoch)))
-    else:
-        out_file = os.path.join(opts.checkpoints, "checkpoint.pth")
-        torch.save(state, out_file)
-        logger.info("Checkpoint saved to {} at epoch {}".format(out_file, str(epoch)))
-    return out_file
+
 
 def check_inputs(opts, logger):
     """
@@ -77,44 +62,6 @@ def check_inputs(opts, logger):
             n_err = n_err + 1
             logger.error(
                 "Folder {} does not exists or is unreadable".format(opts.te_data)
-            )
-
-
-    if opts.do_val:
-        if not (os.path.isdir(opts.val_data) and os.access(opts.val_data, os.R_OK)):
-            n_err = n_err + 1
-            logger.error(
-                "Folder {} does not exists or is unreadable".format(opts.val_data)
-            )
-
-    # --- if cont_train is defined prev_model must be defined as well
-    if opts.cont_train:
-        if opts.prev_model == None:
-            n_err = n_err + 1
-            logger.error("--prev_model must be defined to perform continue training.")
-        else:
-            if not (
-                os.path.isfile(opts.prev_model) and os.access(opts.prev_model, os.R_OK)
-            ):
-                n_err = n_err + 1
-                logger.error(
-                    "File {} does not exists or is unreadable".format(opts.prev_model)
-                )
-        if not opts.do_train:
-            logger.warning(
-                (
-                    "Continue training is defined, but train stage is not. "
-                    "Skipping continue..."
-                )
-            )
-    # --- if test,val or prod is performed, train or prev model must be defined
-    if opts.do_val:
-        if not opts.do_train:
-            logger.warning(
-                (
-                    "Validation data runs only under train stage, but "
-                    "no train stage is running. Skipping validation ..."
-                )
             )
 
     return n_err
